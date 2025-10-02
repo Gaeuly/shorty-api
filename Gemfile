@@ -6,3 +6,7 @@ gem 'sinatra'
 
 # The web server that will run our Sinatra app
 gem 'puma'
+
+# For database interaction
+gem 'sequel'
+gem 'sqlite3'
