@@ -1,53 +1,50 @@
-require 'json'
+require 'sequel'
 require 'securerandom'
 
-# This class is responsible for all interactions with our database file (urls.json).
+# Connect to the database file
+DB = Sequel.connect('sqlite://urls.db')
+
+# Define the model that maps to the 'urls' table.
+# This makes it easy to interact with the table rows as objects.
+class Url < Sequel::Model; end
+
+# This class is now responsible for all interactions with our database.
 class URLStore
-  DB_FILE = 'urls.json'.freeze
-
-  def initialize
-    # Initialize by loading existing data from the JSON file.
-    @data = load_data
-  end
-
-  # Adds a new long URL and returns its short code.
+  # Adds a new long URL to the database and returns its short code.
   def add(long_url)
     short_code = generate_unique_short_code
-    @data[short_code] = long_url
-    save_to_file
+    
+    # Create a new record in the 'urls' table
+    Url.create(
+      long_url: long_url,
+      short_code: short_code,
+      created_at: Time.now
+    )
+    
     short_code
   end
 
   # Finds the original long URL based on a short code.
   def find(short_code)
-    @data[short_code]
+    record = Url.first(short_code: short_code)
+    
+    if record
+      # If found, increment the click count. A nice new feature!
+      record.update(click_count: record.click_count + 1)
+      return record.long_url
+    end
+    
+    nil # Return nil if not found
   end
 
   private
 
-  # Loads data from the JSON file.
-  # If the file doesn't exist or is empty, return an empty Hash.
-  def load_data
-    return {} unless File.exist?(DB_FILE)
-    
-    file_content = File.read(DB_FILE)
-    file_content.empty? ? {} : JSON.parse(file_content)
-  rescue JSON::ParserError
-    # If the JSON file is malformed, treat it as empty.
-    {}
-  end
-
-  # Saves the current data (a Hash) to the JSON file in a pretty format.
-  def save_to_file
-    File.write(DB_FILE, JSON.pretty_generate(@data))
-  end
-
   # Generates a unique 6-character alphanumeric code.
+  # It checks the database to make sure the code is not already in use.
   def generate_unique_short_code
     loop do
       code = SecureRandom.alphanumeric(6)
-      # Return the code only if it's not already in our database.
-      return code unless @data.key?(code)
+      return code if Url.first(short_code: code).nil?
     end
   end
 end
