@@ -51,6 +51,7 @@ end
 # Endpoint to handle redirection from a short URL
 # USAGE: GET /<short_code>
 get '/:short_code' do
+  content_type 'text/html' # Set content type back to HTML for redirection
   short_code = params['short_code']
   long_url = store.find(short_code)
 
@@ -59,6 +60,7 @@ get '/:short_code' do
     redirect long_url, 301
   else
     # If not found, return a 404 error
+    content_type :json # Set back to JSON for error message
     halt 404, { error: 'Short URL not found' }.to_json
   end
 end
