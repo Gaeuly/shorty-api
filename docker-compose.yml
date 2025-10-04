@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  web:
+    build: .
+    ports:
+      - "4567:4567"
+    volumes:
+      # This syncs our local code with the container for development
+      - .:/usr/src/app
+      # This makes sure the database file persists even if the container is removed
+      - shorty_db:/usr/src/app/db
+    entrypoint: /usr/src/app/entrypoint.sh
+
+volumes:
+  shorty_db:
