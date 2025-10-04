@@ -1,18 +1,18 @@
 require 'sequel'
+require 'fileutils'
 
-# Connect to a SQLite database.
-# The file 'urls.db' will be created if it doesn't exist.
-DB = Sequel.connect('sqlite://urls.db')
+# Create a 'db' directory if it doesn't exist
+FileUtils.mkdir_p('db')
 
-# Create a 'urls' table if it doesn't exist.
-# This is where we'll store our URL data.
+# Connect to a SQLite database inside the 'db' directory
+DB = Sequel.connect('sqlite://db/urls.db')
+
 DB.create_table? :urls do
   primary_key :id
   String :long_url, null: false
   String :short_code, null: false, unique: true, index: true
-  Integer :click_count, default: 0 # We'll add this for future features!
+  Integer :click_count, default: 0
   DateTime :created_at
 end
 
-puts "Database 'urls.db' and table 'urls' created successfully."
-puts "You can now run the main app."
+puts "Database 'db/urls.db' and table 'urls' are ready."
